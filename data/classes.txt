@@ -1,7 +1,0 @@
-cardboard_box
-eps_box
-pallet
-container
-locker
-cabinet
-forklift
