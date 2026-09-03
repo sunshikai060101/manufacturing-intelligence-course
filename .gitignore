@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data (large image files, keep config and index)
+# data/processed/images/
+# data/processed/labels/
+
+# Database (can be regenerated)
+# data/database/*.db
+
+# Models
+models/*.pt
+models/*.pth
+
+# Logs
+*.log
+logs/

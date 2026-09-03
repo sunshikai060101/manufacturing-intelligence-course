@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能仓储物料识别与分拣系统</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-icon">&#9881;</span>
+                    <span class="logo-text">智能仓储系统</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-page="dashboard">
+                    <span class="nav-icon">&#128202;</span>
+                    <span class="nav-text">仪表盘</span>
+                </a>
+                <a href="#" class="nav-item" data-page="detection">
+                    <span class="nav-icon">&#128269;</span>
+                    <span class="nav-text">物料检测</span>
+                </a>
+                <a href="#" class="nav-item" data-page="inventory">
+                    <span class="nav-icon">&#128230;</span>
+                    <span class="nav-text">库存管理</span>
+                </a>
+                <a href="#" class="nav-item" data-page="sensor">
+                    <span class="nav-icon">&#128208;</span>
+                    <span class="nav-text">传感器数据</span>
+                </a>
+                <a href="#" class="nav-item" data-page="records">
+                    <span class="nav-icon">&#128196;</span>
+                    <span class="nav-text">检测记录</span>
+                </a>
+                <a href="#" class="nav-item" data-page="settings">
+                    <span class="nav-icon">&#9881;</span>
+                    <span class="nav-text">系统设置</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="system-status">
+                    <span class="status-dot online"></span>
+                    <span id="system-status-text">系统运行中</span>
+                </div>
+                <div class="version">v1.0.0</div>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h1 id="page-title">仪表盘</h1>
+                    <span id="page-subtitle" class="page-subtitle">系统运行概览</span>
+                </div>
+                <div class="topbar-right">
+                    <span id="current-time" class="current-time"></span>
+                    <button class="btn btn-primary" id="btn-refresh">
+                        &#128260; 刷新
+                    </button>
+                </div>
+            </header>
+
+            <!-- 仪表盘页面 -->
+            <section id="page-dashboard" class="page active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">&#128269;</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="stat-total-detections">0</div>
+                            <div class="stat-label">总检测次数</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">&#128197;</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="stat-today-detections">0</div>
+                            <div class="stat-label">今日检测</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange">&#128230;</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="stat-total-inventory">0</div>
+                            <div class="stat-label">库存总量</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon red">&#9888;</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="stat-anomaly-count">0</div>
+                            <div class="stat-label">异常数量</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon teal">&#10003;</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="stat-pass-rate">0%</div>
+                            <div class="stat-label">检测通过率</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-row">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>类别分布统计</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div id="class-distribution" class="class-distribution">
+                                <div class="empty-state">暂无数据</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>近7天检测趋势</h3>
+                        </div>
+                        <div class="panel-body">
+                            <canvas id="trend-chart" width="400" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>最近检测记录</h3>
+                        <button class="btn btn-sm" onclick="navigateTo('records')">查看全部</button>
+                    </div>
+                    <div class="panel-body">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>图像</th>
+                                    <th>类别</th>
+                                    <th>置信度</th>
+                                    <th>融合结果</th>
+                                    <th>异常</th>
+                                    <th>分拣状态</th>
+                                    <th>时间</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-records-body">
+                                <tr><td colspan="8" class="empty-state">暂无检测记录</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 物料检测页面 -->
+            <section id="page-detection" class="page">
+                <div class="detection-layout">
+                    <div class="detection-left">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3>图像上传与检测</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="upload-area" id="upload-area">
+                                    <input type="file" id="image-input" accept="image/*" hidden>
+                                    <div class="upload-icon">&#128247;</div>
+                                    <p class="upload-text">点击或拖拽图像到此处上传</p>
+                                    <p class="upload-hint">支持 JPG、PNG、BMP 格式</p>
+                                </div>
+                                <div class="detection-options">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="opt-fusion" checked>
+                                        启用多传感器融合
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="opt-anomaly" checked>
+                                        启用异常检测
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="opt-simulate" checked>
+                                        模拟传感器数据
+                                    </label>
+                                </div>
+                                <button class="btn btn-primary btn-block" id="btn-detect" disabled>
+                                    &#128269; 开始检测
+                                </button>
+                                <div id="detection-progress" class="progress-container hidden">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" id="progress-fill"></div>
+                                    </div>
+                                    <span id="progress-text">正在检测...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3>检测结果预览</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="image-preview" id="image-preview">
+                                    <div class="empty-state">上传图像后显示预览</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detection-right">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3>检测结果详情</h3>
+                                <span class="badge" id="detection-count">0 个目标</span>
+                            </div>
+                            <div class="panel-body">
+                                <div id="detection-results" class="detection-results">
+                                    <div class="empty-state">暂无检测结果</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3>多传感器融合结果</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div id="fusion-results" class="fusion-results">
+                                    <div class="empty-state">暂无融合结果</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3>异常检测结果</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div id="anomaly-results" class="anomaly-results">
+                                    <div class="empty-state">暂无异常检测结果</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 库存管理页面 -->
+            <section id="page-inventory" class="page">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>库存列表</h3>
+                        <div class="panel-actions">
+                            <button class="btn btn-primary btn-sm" id="btn-add-inventory">+ 新增库存</button>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>类别ID</th>
+                                    <th>类别名称</th>
+                                    <th>库存数量</th>
+                                    <th>存放位置</th>
+                                    <th>最低库存</th>
+                                    <th>最高库存</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-body">
+                                <tr><td colspan="9" class="empty-state">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 传感器数据页面 -->
+            <section id="page-sensor" class="page">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">&#9878;</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="sensor-weight-mean">0</div>
+                            <div class="stat-label">平均重量 (kg)</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">&#128200;</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="sensor-weight-max">0</div>
+                            <div class="stat-label">最大重量 (kg)</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange">&#128201;</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="sensor-weight-min">0</div>
+                            <div class="stat-label">最小重量 (kg)</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon teal">&#128202;</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="sensor-weight-std">0</div>
+                            <div class="stat-label">重量标准差</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>传感器数据记录</h3>
+                        <div class="panel-actions">
+                            <select id="sensor-type-filter" class="form-select">
+                                <option value="">全部类型</option>
+                                <option value="weight">重量传感器</option>
+                                <option value="infrared">红外传感器</option>
+                                <option value="photoelectric">光电传感器</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>传感器类型</th>
+                                    <th>传感器ID</th>
+                                    <th>数值</th>
+                                    <th>单位</th>
+                                    <th>时间</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sensor-body">
+                                <tr><td colspan="6" class="empty-state">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 检测记录页面 -->
+            <section id="page-records" class="page">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>检测记录</h3>
+                        <div class="panel-actions">
+                            <select id="record-class-filter" class="form-select">
+                                <option value="">全部类别</option>
+                            </select>
+                            <select id="record-fusion-filter" class="form-select">
+                                <option value="">全部融合结果</option>
+                                <option value="pass">通过</option>
+                                <option value="warning">警告</option>
+                                <option value="reject">拒绝</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>图像名称</th>
+                                    <th>类别</th>
+                                    <th>置信度</th>
+                                    <th>融合结果</th>
+                                    <th>融合置信度</th>
+                                    <th>异常</th>
+                                    <th>异常分数</th>
+                                    <th>分拣状态</th>
+                                    <th>时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="records-body">
+                                <tr><td colspan="11" class="empty-state">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                        <div class="pagination">
+                            <button class="btn btn-sm" id="btn-prev-page">上一页</button>
+                            <span id="page-info">第 1 页</span>
+                            <button class="btn btn-sm" id="btn-next-page">下一页</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 系统设置页面 -->
+            <section id="page-settings" class="page">
+                <div class="settings-layout">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>检测参数设置</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="form-group">
+                                <label>置信度阈值</label>
+                                <input type="number" class="form-input" id="setting-confidence" value="0.5" step="0.05" min="0.1" max="0.95">
+                                <span class="form-hint">目标检测的最低置信度，默认0.5</span>
+                            </div>
+                            <div class="form-group">
+                                <label>IOU阈值</label>
+                                <input type="number" class="form-input" id="setting-iou" value="0.45" step="0.05" min="0.1" max="0.9">
+                                <span class="form-hint">非极大值抑制的IOU阈值，默认0.45</span>
+                            </div>
+                            <button class="btn btn-primary" id="btn-save-detection-settings">保存检测设置</button>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>融合参数设置</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="form-group">
+                                <label>视觉权重</label>
+                                <input type="number" class="form-input" id="setting-visual-weight" value="0.6" step="0.1" min="0" max="1">
+                                <span class="form-hint">多传感器融合中视觉结果的权重，默认0.6</span>
+                            </div>
+                            <div class="form-group">
+                                <label>传感器权重</label>
+                                <input type="number" class="form-input" id="setting-sensor-weight" value="0.4" step="0.1" min="0" max="1">
+                                <span class="form-hint">多传感器融合中传感器数据的权重，默认0.4</span>
+                            </div>
+                            <div class="form-group">
+                                <label>重量容差比例</label>
+                                <input type="number" class="form-input" id="setting-weight-tolerance" value="0.3" step="0.05" min="0" max="1">
+                                <span class="form-hint">重量校验的允许偏差比例，默认0.3（±30%）</span>
+                            </div>
+                            <button class="btn btn-primary" id="btn-save-fusion-settings">保存融合设置</button>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>系统信息</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div id="system-info" class="system-info">
+                                <div class="empty-state">加载中...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 模态框 -->
+    <div class="modal-overlay hidden" id="modal-overlay">
+        <div class="modal" id="modal">
+            <div class="modal-header">
+                <h3 id="modal-title">标题</h3>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+            </div>
+            <div class="modal-footer" id="modal-footer">
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 通知 -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+    <script src="/static/js/detection.js"></script>
+    <script src="/static/js/inventory.js"></script>
+    <script src="/static/js/sensor.js"></script>
+    <script src="/static/js/records.js"></script>
+    <script src="/static/js/settings.js"></script>
+</body>
+</html>

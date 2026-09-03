@@ -1,5 +1,0 @@
-cardboard_box
-can
-sphere
-irregular_part
-bag

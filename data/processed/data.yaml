@@ -1,0 +1,12 @@
+path: C:\Users\ssk28\Doubao\chats\2026-09-03\new-chat\smart-warehouse-system\data\processed
+train: images/train
+val: images/val
+test: images/test
+
+names:
+  0: cardboard_box
+  1: pallet
+  2: stillage
+  3: forklift
+  4: eps_box
+  5: wheelie_bin

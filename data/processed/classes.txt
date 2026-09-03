@@ -1,0 +1,6 @@
+cardboard_box
+pallet
+stillage
+forklift
+eps_box
+wheelie_bin
