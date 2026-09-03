@@ -33,6 +33,7 @@ Thumbs.db
 # Models
 models/*.pt
 models/*.pth
+!models/best.pt
 
 # Logs
 *.log
